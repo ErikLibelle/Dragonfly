@@ -1,5 +1,8 @@
 {
-    "python.formatting.autopep8Args": [],
-    "python.analysis.typeCheckingMode": "basic",
-    "editor.formatOnSave": true
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "editor.formatOnSave": true,
+    "editor.wordBasedSuggestions": "off"
+  }
 }

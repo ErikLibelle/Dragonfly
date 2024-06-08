@@ -2,11 +2,11 @@
 
 from util.objects import *
 from util.routines import Kickoff, ShortShot, GoTo
-from util.common import compare_vec_mag
 
 
 class Bot(CommandAgent):
     intent_swaps = 0
+
     # This function runs every in-game tick (every time the game updates anything)
     def run(self):
         me = self.me
@@ -17,16 +17,19 @@ class Bot(CommandAgent):
             return
 
         self.intent_swaps += 1
-        print('intent swaps', self.intent_swaps)
 
         if self.kickoff_flag:
             self.set_intent(Kickoff())
             return
-        
+
         # offense
         # if compare_vec_mag(me.location - ball.location, opponent.location - ball.location) > 0:
-        if (me.location - ball.location).magnitude() < (opponent.location - ball.location).magnitude():
-            if (me.location - self.foe_goal.location).magnitude() < (me.location - ball.location).magnitude():
+        if (me.location - ball.location).magnitude() < (
+            opponent.location - ball.location
+        ).magnitude():
+            if (me.location - self.foe_goal.location).magnitude() < (
+                me.location - ball.location
+            ).magnitude():
                 self.set_intent(GoTo(self.friend_goal.location))
                 return
             self.set_intent(ShortShot(self.foe_goal.location))
@@ -88,4 +91,3 @@ class Bot(CommandAgent):
         # - Is there any low-hanging fruit that the bot can learn from (e.g. when the opponent takes shots,
         #   what they do after shots, where they get in bad position, etc...)
         # Can we know all of the info about our opponent?
-
