@@ -16,6 +16,9 @@ class iCar(Protocol):
     boost: int
     index: int
 
+    def __init__(self, index: int, packet: GameTickPacket) -> None:
+        super().__init__()
+
     def local(self, value: "iVector3") -> "iVector3":
         pass
 
@@ -146,34 +149,6 @@ class iCommandAgent(Protocol):
 
 
 class iVector3(Protocol):
-    _x: float
-    _y: float
-    _z: float
-
-    @property
-    def x(self) -> float:
-        return self._x
-
-    @x.setter
-    def x(self, value: float) -> None:
-        self._x = value
-
-    @property
-    def y(self) -> float:
-        return self._y
-
-    @y.setter
-    def y(self, value: float) -> None:
-        self._y = value
-
-    @property
-    def z(self) -> float:
-        return self._z
-
-    @z.setter
-    def z(self, value: float) -> None:
-        self._z = value
-
     def __getitem__(self, key: int) -> float:
         pass
 

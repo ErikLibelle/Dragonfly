@@ -4,8 +4,6 @@ from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
 
 from util.interfaces import *
 
-# Includes custom vector and matrix objects
-
 
 class CommandAgent(BaseAgent, iCommandAgent):
     def initialize_agent(self):
@@ -143,7 +141,7 @@ class CommandAgent(BaseAgent, iCommandAgent):
         pass
 
 
-class Car:
+class Car(iCar):
     # The carObject, and kin, convert the gametickpacket in something a little friendlier to use,
     # and are updated by CommandAgent as the game runs
     def __init__(self, index, packet=None):
@@ -212,7 +210,7 @@ class Car:
         return self.orientation.up
 
 
-class Ball:
+class Ball(iBall):
     def __init__(self):
         self.location = Vector3(0, 0, 0)
         self.velocity = Vector3(0, 0, 0)
@@ -235,7 +233,7 @@ class Ball:
         self.latest_touched_team = ball.latest_touch.team
 
 
-class Boost:
+class Boost(iBoost):
     def __init__(self, index, location):
         self.index = index
         self.location = Vector3(location.x, location.y, location.z)
@@ -247,7 +245,7 @@ class Boost:
         self.active = packet.game_boosts[self.index].is_active
 
 
-class Goal:
+class Goal(iGoal):
     # This is a simple object that creates/holds goalpost locations for a given team (for soccer on standard maps only)
     def __init__(self, team):
         team = 1 if team == 1 else -1
@@ -277,7 +275,7 @@ class Game(iGame):
         self.match_ended = game.is_match_ended
 
 
-class Matrix3:
+class Matrix3(iMatrix3):
     # The Matrix3's sole purpose is to convert roll, pitch, and yaw data into an orientation matrix
     # An orientation matrix contains 3 Vector3's
     # Matrix3[0] is the "forward" direction of a given car
@@ -309,7 +307,7 @@ class Matrix3:
         )
 
 
-class Vector3:
+class Vector3(iVector3):
     # The Vector3 makes it easy to store positions, velocities, etc and perform vector math
     # A Vector3 can be created with:
     # - Anything that has a __getitem__ (lists, tuples, Vector3's, etc)
