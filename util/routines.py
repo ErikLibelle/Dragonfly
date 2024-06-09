@@ -1,5 +1,5 @@
 from util.common import *
-from util.interfaces.SmartRoutine import SmartRoutine
+from util.interfaces import iSmartRoutine
 
 # This file holds all of the mechanical tasks, called "routines", that the bot can do
 
@@ -173,7 +173,7 @@ class aerial_shot:
             agent.clear_intent()
 
 
-class Flip(SmartRoutine):
+class Flip(iSmartRoutine):
     # Flip takes a vector in local coordinates and flips/dodges in that direction
     # cancel causes the flip to cancel halfway through, which can be used to half-flip
     def __init__(self, vector, cancel=False):
@@ -206,7 +206,7 @@ class Flip(SmartRoutine):
             agent.set_intent(Recovery())
 
 
-class GoTo(SmartRoutine):
+class GoTo(iSmartRoutine):
     # Drives towards a designated (stationary) target
     # Optional vector controls where the car should be pointing upon reaching the target
     # TODO - slow down if target is inside our turn radius
@@ -489,7 +489,7 @@ class jump_shot:
                 agent.controller.yaw = self.y if abs(self.y) > 0.3 else 0
 
 
-class Kickoff(SmartRoutine):
+class Kickoff(iSmartRoutine):
     def run(self, agent):
         target = agent.ball.location + Vector3(0, 200 * side(agent.team), 0)
         local_target = agent.me.local(target - agent.me.location)
@@ -505,7 +505,7 @@ class Kickoff(SmartRoutine):
         return super().next_check()
 
 
-class Recovery(SmartRoutine):
+class Recovery(iSmartRoutine):
     # Point towards our velocity vector and land upright, unless we aren't moving very fast
     # A vector can be provided to control where the car points when it lands
     def __init__(self, target=None):
@@ -523,7 +523,7 @@ class Recovery(SmartRoutine):
             agent.clear_intent()
 
 
-class ShortShot(SmartRoutine):
+class ShortShot(iSmartRoutine):
     # This routine drives towards the ball and attempts to hit it towards a given target
     # It does not require ball prediction and kinda guesses at where the ball will be on its own
     def __init__(self, target: Vector3):

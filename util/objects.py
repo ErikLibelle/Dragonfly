@@ -1,32 +1,29 @@
 import math
 import rlbot.utils.structures.game_data_struct as game_data_struct
 from rlbot.agents.base_agent import BaseAgent, SimpleControllerState
-from util.interfaces.SmartRoutine import SmartRoutine
 
+from util.interfaces import *
 
-# This file holds all of the objects used in gosling utils
 # Includes custom vector and matrix objects
 
 
-class CommandAgent(BaseAgent):
-    # This is the main object of Gosling Utils. It holds/updates information about the game and runs routines
-    # All utils rely on information being structured and accessed the same way as configured in this class
+class CommandAgent(BaseAgent, iCommandAgent):
     def initialize_agent(self):
         # A list of cars for both teammates and opponents
         self.friends = []
         self.foes = []
         # This holds the carobject for our agent
-        self.me = car_object(self.index)
+        self.me = Car(self.index)
 
-        self.ball = ball_object()
-        self.game = game_object()
+        self.ball = Ball()
+        self.game = Game()
         # A list of boosts
         self.boosts = []
         # goals
-        self.friend_goal = goal_object(self.team)
-        self.foe_goal = goal_object(not self.team)
-        # Where we store the bot's current objective
-        self.intent: SmartRoutine | None = None
+        self.friend_goal = Goal(self.team)
+        self.foe_goal = Goal(not self.team)
+        # Where we store the bot's current objective when it is known
+        self.intent = None
         # Game time
         self.time = 0.0
         # Whether or not CommandAgent has run its get_ready() function
@@ -41,7 +38,7 @@ class CommandAgent(BaseAgent):
         field_info = self.get_field_info()
         for i in range(field_info.num_boosts):
             boost = field_info.boost_pads[i]
-            self.boosts.append(boost_object(i, boost.location))
+            self.boosts.append(Boost(i, boost.location))
         self.refresh_player_lists(packet)
         self.ball.update(packet)
         self.ready = True
@@ -50,12 +47,12 @@ class CommandAgent(BaseAgent):
         # makes new freind/foe lists
         # Useful to keep separate from get_ready because humans can join/leave a match
         self.friends = [
-            car_object(i, packet)
+            Car(i, packet)
             for i in range(packet.num_cars)
             if packet.game_cars[i].team == self.team and i != self.index
         ]
         self.foes = [
-            car_object(i, packet)
+            Car(i, packet)
             for i in range(packet.num_cars)
             if packet.game_cars[i].team != self.team
         ]
@@ -146,20 +143,7 @@ class CommandAgent(BaseAgent):
         pass
 
 
-# class SmartRoutine():
-#     last_check: int
-#     name: str
-#     # gets flipped to false on the first time the routine is run
-#     first_run: bool = True
-
-#     def run(self, agent: CommandAgent) -> None:
-#         pass
-
-#     def next_check(self) -> int:
-#         return 100
-
-
-class car_object:
+class Car:
     # The carObject, and kin, convert the gametickpacket in something a little friendlier to use,
     # and are updated by CommandAgent as the game runs
     def __init__(self, index, packet=None):
@@ -228,7 +212,7 @@ class car_object:
         return self.orientation.up
 
 
-class ball_object:
+class Ball:
     def __init__(self):
         self.location = Vector3(0, 0, 0)
         self.velocity = Vector3(0, 0, 0)
@@ -251,7 +235,7 @@ class ball_object:
         self.latest_touched_team = ball.latest_touch.team
 
 
-class boost_object:
+class Boost:
     def __init__(self, index, location):
         self.index = index
         self.location = Vector3(location.x, location.y, location.z)
@@ -263,7 +247,7 @@ class boost_object:
         self.active = packet.game_boosts[self.index].is_active
 
 
-class goal_object:
+class Goal:
     # This is a simple object that creates/holds goalpost locations for a given team (for soccer on standard maps only)
     def __init__(self, team):
         team = 1 if team == 1 else -1
@@ -273,7 +257,7 @@ class goal_object:
         self.right_post = Vector3(-team * 850, team * 5100, 320)
 
 
-class game_object:
+class Game(iGame):
     # This object holds information about the current match
     def __init__(self):
         self.time = 0
@@ -326,7 +310,6 @@ class Matrix3:
 
 
 class Vector3:
-    # This is the backbone of Gosling Utils.
     # The Vector3 makes it easy to store positions, velocities, etc and perform vector math
     # A Vector3 can be created with:
     # - Anything that has a __getitem__ (lists, tuples, Vector3's, etc)
