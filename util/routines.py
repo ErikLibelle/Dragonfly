@@ -26,7 +26,7 @@ class atba:
 
 
 class aerial_shot:
-    # Very similar to jump_shot(), but instead designed to hit targets above 300uu
+    # Very similar to JumpShot(), but instead designed to hit targets above 300uu
     # ***This routine is a WIP*** It does not currently hit the ball very hard, nor does it like to be accurate above 600uu or so
     def __init__(self, ball_location, intercept_time, shot_vector, ratio):
         self.ball_location = ball_location
@@ -35,7 +35,7 @@ class aerial_shot:
         self.shot_vector = shot_vector
         # The point we hit the ball at
         self.intercept = self.ball_location - (self.shot_vector * 110)
-        # dictates when (how late) we jump, much later than in jump_shot because we can take advantage of a double jump
+        # dictates when (how late) we jump, much later than in JumpShot because we can take advantage of a double jump
         self.jump_threshold = 600
         # what time we began our jump at
         self.jump_time = 0
@@ -227,7 +227,7 @@ class GoTo(iSmartRoutine):
         )
 
         if self.vector != None:
-            # See comments for adjustment in jump_shot or aerial for explanation
+            # See comments for adjustment in JumpShot or aerial for explanation
             side_of_vector = sign(self.vector.cross((0, 0, 1)).dot(car_to_target))
             car_to_target_perp = car_to_target.cross((0, 0, side_of_vector)).normalize()
             adjustment = car_to_target.angle(self.vector) * distance_remaining / 3.14
@@ -329,7 +329,7 @@ class goto_boost:
             agent.set_intent(Flip(local_target))
 
 
-class jump_shot:
+class JumpShot(iSmartRoutine):
     # Hits a target point at a target time towards a target direction
     # Target must be no higher than 300uu unless you're feeling lucky
     # TODO - speed

@@ -2,6 +2,7 @@
 
 from util.objects import *
 from util.routines import Kickoff, ShortShot, GoTo
+from util.tools import find_hits
 
 
 class Bot(CommandAgent):
@@ -22,8 +23,10 @@ class Bot(CommandAgent):
             self.set_intent(Kickoff())
             return
 
+        # @TODO: Make a state engine that determines whether we are in offense, defense, or scramble
+
+        # don't judge my default code, this is a placeholder for week 2
         # offense
-        # if compare_vec_mag(me.location - ball.location, opponent.location - ball.location) > 0:
         if (me.location - ball.location).magnitude() < (
             opponent.location - ball.location
         ).magnitude():
@@ -32,10 +35,51 @@ class Bot(CommandAgent):
             ).magnitude():
                 self.set_intent(GoTo(self.friend_goal.location))
                 return
+            targets = {
+                "at_opponent_goal": (self.foe_goal.left_post, self.foe_goal.right_post),
+                "away_from_my_net": (
+                    self.friend_goal.right_post,
+                    self.friend_goal.left_post,
+                ),
+            }
+            hits = find_hits(self, targets)
+            if len(hits["at_opponent_goal"]) > 0:
+                self.set_intent(hits["at_opponent_goal"][0])
+                return
+            # fall back to short shot
             self.set_intent(ShortShot(self.foe_goal.location))
             return
+        # defense
         else:
-            self.set_intent(GoTo(ball.location))
+            # boosts is a sorted list of large boosts by distance to friend goal
+            boosts = [boost for boost in self.boosts if boost.active and boost.large]
+            boosts.sort(
+                key=lambda boost: (
+                    boost.location - self.friend_goal.location
+                ).magnitude()
+            )
+
+            if (
+                ball.location - self.friend_goal.location
+            ).magnitude() < 5120 and me.boost < 40:
+                self.set_intent(GoTo(boosts[0].location))
+                return
+            targets = {
+                "at_opponent_goal": (self.foe_goal.left_post, self.foe_goal.right_post),
+                "away_from_my_net": (
+                    self.friend_goal.right_post,
+                    self.friend_goal.left_post,
+                ),
+            }
+            hits = find_hits(self, targets)
+            if len(hits["at_opponent_goal"]) > 0:
+                self.set_intent(hits["at_opponent_goal"][0])
+                return
+            if len(hits["away_from_my_net"]) > 0:
+                self.set_intent(hits["away_from_my_net"][0])
+                return
+
+            self.set_intent(GoTo(me.location + (me.location - ball.location) / 2))
 
         # if kickoff, kick off
         # if within <x> seconds of kickoff, run strategy based on how the opponent is acting

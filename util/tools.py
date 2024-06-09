@@ -1,9 +1,10 @@
 from util.routines import *
+from util.interfaces import iCommandAgent
 
 # This file is for strategic tools
 
 
-def find_hits(agent, targets):
+def find_hits(agent: iCommandAgent, targets):
     # find_hits takes a dict of (left,right) target pairs and finds routines that could hit the ball between those target pairs
     # find_hits is only meant for routines that require a defined intercept time/place in the future
     # find_hits should not be called more than once in a given tick, as it has the potential to use an entire tick to calculate
@@ -90,7 +91,7 @@ def find_hits(agent, targets):
                                     )
                                 ) and slope > 0.0:
                                     hits[pair].append(
-                                        jump_shot(
+                                        JumpShot(
                                             ball_location,
                                             intercept_time,
                                             best_shot_vector,
@@ -125,7 +126,7 @@ def find_hits(agent, targets):
                                 and slope > 0.25
                             ):
                                 hits[pair].append(
-                                    jump_shot(
+                                    JumpShot(
                                         ball_location,
                                         intercept_time,
                                         best_shot_vector,
