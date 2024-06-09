@@ -207,8 +207,6 @@ class Flip(iSmartRoutine):
 
 
 class GoTo(iSmartRoutine):
-    name = "GoTo"
-
     # Drives towards a designated (stationary) target
     # Optional vector controls where the car should be pointing upon reaching the target
     # TODO - slow down if target is inside our turn radius
@@ -493,6 +491,7 @@ class jump_shot:
 
 class Kickoff(iSmartRoutine):
     def run(self, agent):
+        super().__init__()
         target = agent.ball.location + Vector3(0, 200 * side(agent.team), 0)
         local_target = agent.me.local(target - agent.me.location)
         defaultPD(agent, local_target)
@@ -511,6 +510,7 @@ class Recovery(iSmartRoutine):
     # Point towards our velocity vector and land upright, unless we aren't moving very fast
     # A vector can be provided to control where the car points when it lands
     def __init__(self, target=None):
+        super().__init__()
         self.target = target
 
     def run(self, agent):
@@ -529,6 +529,7 @@ class ShortShot(iSmartRoutine):
     # This routine drives towards the ball and attempts to hit it towards a given target
     # It does not require ball prediction and kinda guesses at where the ball will be on its own
     def __init__(self, target: Vector3):
+        super().__init__()
         self.target = target
 
     def run(self, agent):

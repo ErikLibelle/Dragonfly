@@ -33,7 +33,7 @@ class CommandAgent(BaseAgent, iCommandAgent):
 
     def get_ready(self, packet):
         # Preps all of the objects that will be updated during play
-        field_info = self.get_field_info()
+        field_info: game_data_struct.FieldInfoPacket = self.get_field_info()
         for i in range(field_info.num_boosts):
             boost = field_info.boost_pads[i]
             self.boosts.append(Boost(i, boost.location))
