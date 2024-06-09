@@ -78,8 +78,14 @@ class iGame(Protocol):
 
 class iSmartRoutine(Protocol):
     last_check: int = -10000
-    name: str = "Untitled Routine"
+    name: str = ""
     first_run: bool = False
+
+    def __init__(self) -> None:
+        super().__init__()
+        if self.name == "":
+            self.name = self.__class__.__name__
+        print(f"{self.name} routine initialized.")
 
     def run(self, agent: "iCommandAgent") -> None:
         pass

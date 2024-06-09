@@ -176,8 +176,8 @@ class aerial_shot:
 class Flip(iSmartRoutine):
     # Flip takes a vector in local coordinates and flips/dodges in that direction
     # cancel causes the flip to cancel halfway through, which can be used to half-flip
-    def __init__(self, vector, cancel=False):
-        print("FLIP INTENT GENERATED")
+    def __init__(self, vector: Vector3, cancel=False):
+        super().__init__()
         self.vector = vector.normalize()
         self.pitch = abs(self.vector[0]) * -sign(self.vector[0])
         self.yaw = abs(self.vector[1]) * sign(self.vector[1])
@@ -207,10 +207,13 @@ class Flip(iSmartRoutine):
 
 
 class GoTo(iSmartRoutine):
+    name = "GoTo"
+
     # Drives towards a designated (stationary) target
     # Optional vector controls where the car should be pointing upon reaching the target
     # TODO - slow down if target is inside our turn radius
     def __init__(self, target, vector=None, direction=1):
+        super().__init__()
         self.target = target
         self.vector = vector
         self.direction = direction
@@ -257,7 +260,6 @@ class GoTo(iSmartRoutine):
             and velocity < 2150
             and distance_remaining / velocity > 2.0
         ):
-            print("IM FLIPPING")
             agent.set_intent(Flip(local_target))
         elif abs(angles[1]) > 2.8 and velocity < 200:
             agent.set_intent(Flip(local_target, True))
