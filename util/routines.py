@@ -506,6 +506,366 @@ class Kickoff(iSmartRoutine):
         return super().next_check()
 
 
+class goto_kickoff(iSmartRoutine):
+    def __init__(self, target, vector=None, direction=1):
+        self.target = target
+        self.vector = vector
+        self.direction = direction
+
+    def run(self, agent):
+        print("GotoKickoff")
+        defaultThrottle(agent, 2300, self.direction)
+        car_to_target = self.target - agent.me.location
+        distance_remaining = car_to_target.flatten().magnitude()
+
+        agent.line(
+            self.target - Vector3(0, 0, 500),
+            self.target + Vector3(0, 0, 500),
+            [255, 0, 255],
+        )
+
+        if self.vector != None:
+            print("if1")
+            side_of_vector = sign(self.vector.cross((0, 0, 1)).dot(car_to_target))
+            car_to_target_perp = car_to_target.cross((0, 0, side_of_vector)).normalize()
+            adjustment = car_to_target.angle(self.vector) * distance_remaining / 3.14
+            final_target = self.target + (car_to_target_perp * adjustment)
+        else:
+            print("if2")
+            final_target = self.target
+
+        local_target = agent.me.local(final_target - agent.me.location)
+
+        angles = defaultPD(agent, local_target, self.direction)
+        velocity = 1 + agent.me.velocity.magnitude()
+
+        if distance_remaining < 650:  # was 350
+            # Switch intent to speed flip then kickoff like normal | dont flip to center of ball
+            agent.set_intent(kickoff_short2())
+
+
+class goto_kickoff_mid(iSmartRoutine):
+    def __init__(self, target, vector=None, direction=1):
+        self.target = target
+        self.vector = vector
+        self.direction = direction
+
+    def run(self, agent):
+        defaultThrottle(agent, 2300, self.direction)
+        car_to_target = self.target - agent.me.location
+        distance_remaining = car_to_target.flatten().magnitude()
+
+        agent.line(
+            self.target - Vector3(0, 0, 500),
+            self.target + Vector3(0, 0, 500),
+            [255, 0, 255],
+        )
+
+        if self.vector != None:
+            side_of_vector = sign(self.vector.cross((0, 0, 1)).dot(car_to_target))
+            car_to_target_perp = car_to_target.cross((0, 0, side_of_vector)).normalize()
+            adjustment = car_to_target.angle(self.vector) * distance_remaining / 3.14
+            final_target = self.target + (car_to_target_perp * adjustment)
+        else:
+            final_target = self.target
+
+        local_target = agent.me.local(final_target - agent.me.location)
+
+        angles = defaultPD(agent, local_target, self.direction)
+
+        if distance_remaining < 650:  # was 350
+            # Switch intent to speed flip then kickoff like normal | dont flip to center of ball
+            agent.set_intent(kickoff_mid2())
+
+
+class kickoff_recover(iSmartRoutine):  # Recovery
+    def __init__(self, target=None):
+        self.target = target
+
+    def run(self, agent):
+        ball_localup = agent.me.local(agent.ball.location - agent.me.location)
+        if self.target != None:
+            local_target = agent.me.local((self.target - agent.me.location).flatten())
+        else:
+            local_target = agent.me.local(agent.me.velocity.flatten())
+
+        defaultThrottle(agent, 2300)
+        defaultPD(agent, local_target)
+        agent.controller.throttle = 1
+        if not agent.me.airborne:
+            if agent.ball_local[1] < 1:
+                defaultThrottle(agent, 2300)
+                agent.set_intent(flip(ball_localup))
+                return
+            else:
+                # defaultThrottle(agent, 2300)
+                agent.set_intent(flip(ball_localup))
+                # agent.set_intent(kickoff_end())
+
+
+class kickoff_flip(iSmartRoutine):  # Flip
+    # Flip takes a vector in local coordinates and flips/dodges in that direction
+    # cancel causes the flip to cancel halfway through, which can be used to half-flip
+    def __init__(self, vector, cancel=False):
+        self.vector = vector.normalize()
+        self.pitch = abs(self.vector[0]) * -sign(self.vector[0])
+        self.yaw = abs(self.vector[1]) * sign(self.vector[1])
+        self.cancel = cancel
+        # the time the jump began
+        self.time = -1
+        # keeps track of the frames the jump button has been released
+        self.counter = 0
+
+    def run(self, agent):
+        defaultThrottle(agent, 2300)
+        if self.time == -1:
+            elapsed = 0
+            self.time = agent.time
+        else:
+            elapsed = agent.time - self.time
+        if elapsed < 0.15:
+            agent.controller.jump = True
+        elif elapsed >= 0.15 and self.counter < 3:
+            agent.controller.jump = False
+            self.counter += 1
+        elif elapsed < 0.3 or (not self.cancel and elapsed < 0.9):
+            agent.controller.jump = True
+            agent.controller.pitch = self.pitch
+            agent.controller.yaw = self.yaw
+        else:
+            agent.set_intent(kickoff_recover(agent.ball.location))
+
+
+class flip(iSmartRoutine):
+    # Flip takes a vector in local coordinates and flips/dodges in that direction
+    # cancel causes the flip to cancel halfway through, which can be used to half-flip
+    def __init__(self, vector, cancel=False):
+        self.vector = vector.normalize()
+        self.pitch = abs(self.vector[0]) * -sign(self.vector[0])
+        self.yaw = abs(self.vector[1]) * sign(self.vector[1])
+        self.cancel = cancel
+        # the time the jump began
+        self.time = -1
+        # keeps track of the frames the jump button has been released
+        self.counter = 0
+
+    def run(self, agent):
+        if self.time == -1:
+            elapsed = 0
+            self.time = agent.time
+        else:
+            elapsed = agent.time - self.time
+        if elapsed < 0.15:
+            agent.controller.jump = True
+        elif elapsed >= 0.15 and self.counter < 3:
+            agent.controller.jump = False
+            self.counter += 1
+        elif elapsed < 0.3 or (not self.cancel and elapsed < 0.9):
+            agent.controller.jump = True
+            agent.controller.pitch = self.pitch
+            agent.controller.yaw = self.yaw
+        else:
+            agent.set_intent(recovery())
+
+
+class kickoff(iSmartRoutine):
+    # A simple 1v1 kickoff that just drives up behind the ball and dodges
+    # misses the boost on the slight-offcenter kickoffs haha
+    def run(self, agent):
+        target = agent.ball.location + Vector3(0, 200 * side(agent.team), 0)
+        local_target = agent.me.local(
+            target - agent.me.location
+        )  # Used in normal kickoff to determine how close to ball / when flip
+        defaultPD(agent, local_target)
+        defaultThrottle(agent, 2300)
+        if local_target.magnitude() < 650:
+            # flip towards opponent goal
+            agent.set_intent(
+                flip(agent.me.local(agent.foe_goal.location - agent.me.location))
+            )
+
+
+class kickoff_wide(
+    iSmartRoutine
+):  # Corner | Need to figure out which side, left or right
+    def run(self, agent):
+        ball_local = agent.ball_local
+        if ball_local[1] > 0:  # R
+            print("Speedflip: Right")
+            agent.set_intent(
+                goto_kickoff_wide(
+                    Vector3(800 * side(agent.team), 1280 * side(agent.team), 0)
+                )
+            )
+            # agent.set_intent(kickoff_flip(agent.me.local(Vector3(1700*side(agent.team), 0, 0) - agent.me.location), True))
+            return
+        else:  # L
+            print("Speedflip: Left")
+            agent.set_intent(
+                goto_kickoff_wide(
+                    Vector3(-800 * side(agent.team), 1280 * side(agent.team), 0)
+                )
+            )
+            # agent.set_intent(kickoff_flip(agent.me.local(Vector3(1700*side(agent.team), 0, 0) - agent.me.location), True))
+            return
+
+
+class kickoff_wide2(iSmartRoutine):  # Update later to be more centered
+    def run(self, agent):
+        ball_local = agent.ball_local
+        if ball_local[1] > 0:
+            agent.set_intent(
+                kickoff_flip(
+                    agent.me.local(
+                        Vector3(950 * side(agent.team), 0, 0) - agent.me.location
+                    ),
+                    True,
+                )
+            )
+            return
+        else:
+            agent.set_intent(
+                kickoff_flip(
+                    agent.me.local(
+                        Vector3(-950 * side(agent.team), 0, 0) - agent.me.location
+                    ),
+                    True,
+                )
+            )
+            return
+
+
+class kickoff_short(
+    iSmartRoutine
+):  # Back Sides | Need to figure out which side, left or right
+    def run(self, agent):
+        ball_local = agent.ball_local
+        target = agent.ball.location + Vector3(0, 200 * side(agent.team), 0)
+        if ball_local[1] < 0:  # R
+            agent.set_intent(
+                goto_kickoff(Vector3(45 * side(agent.team), 2816 * side(agent.team), 0))
+            )
+        else:  # L
+            agent.set_intent(
+                goto_kickoff(
+                    Vector3(-45 * side(agent.team), 2816 * side(agent.team), 0)
+                )
+            )
+
+
+# Does not jump like wide and center to hit center of ball, hit from bottom so go over oppononent
+# Flips into boost / before boost
+
+# MAKE SURE IT IS DOING RIGHT FLIP THEN FIGURE OUT HOW TO CANCEL AND BOOST THROUGH
+
+
+class kickoff_mid2(iSmartRoutine):
+    def run(self, agent):
+        print("Speedflip Left")  # Log
+        print(agent.me.local)
+        agent.set_intent(
+            kickoff_flip(
+                agent.me.local(
+                    Vector3(-1700 * side(agent.team), 0, 0) - agent.me.location
+                ),
+                True,
+            )
+        )
+        return
+
+
+class kickoff_short2(iSmartRoutine):
+    def run(self, agent):
+        ball_local = agent.ball_local
+        target = agent.ball.location + Vector3(0, 200 * side(agent.team), 0)
+        if ball_local[1] < 0:
+            print("Speedflip Right")  # Log
+            print(agent.me.local)
+            agent.set_intent(
+                kickoff_flip(
+                    agent.me.local(
+                        Vector3(1700 * side(agent.team), 0, 0) - agent.me.location
+                    ),
+                    True,
+                )
+            )
+        else:
+            print("Speedflip Left")  # Log
+            print(agent.me.local)
+            agent.set_intent(
+                kickoff_flip(
+                    agent.me.local(
+                        Vector3(-1700 * side(agent.team), 0, 0) - agent.me.location
+                    ),
+                    True,
+                )
+            )
+
+
+class kickoff_center(iSmartRoutine):  # Back Center
+    def run(
+        self, agent
+    ):  # If can add boost through flip later keep otherwise add extra flip to end
+        agent.set_intent(
+            goto_kickoff_mid(
+                Vector3(110 * side(agent.team), 3200 * side(agent.team), 0)
+            )
+        )
+        # agent.set_intent(kickoff()) # change direction to 20 degrees then flip
+        # agent.set_intent(kickoff_flip(agent.me.local(Vector3(1024*side(agent.team), 0, 0) - agent.me.location), True))
+
+
+class goto_kickoff_wide(iSmartRoutine):
+    def __init__(self, target, vector=None, direction=1):
+        self.target = target
+        self.vector = vector
+        self.direction = direction
+
+    def run(self, agent):
+        defaultThrottle(agent, 2300, self.direction)
+        car_to_target = self.target - agent.me.location
+        distance_remaining = car_to_target.flatten().magnitude()
+
+        agent.line(
+            self.target - Vector3(0, 0, 500),
+            self.target + Vector3(0, 0, 500),
+            [255, 0, 255],
+        )
+
+        if self.vector != None:
+            side_of_vector = sign(self.vector.cross((0, 0, 1)).dot(car_to_target))
+            car_to_target_perp = car_to_target.cross((0, 0, side_of_vector)).normalize()
+            adjustment = car_to_target.angle(self.vector) * distance_remaining / 3.14
+            final_target = self.target + (car_to_target_perp * adjustment)
+        else:
+            final_target = self.target
+
+        if abs(agent.me.location[1]) > 5150:
+            final_target[0] = cap(final_target[0], -750, 750)
+
+        if distance_remaining < 350:  # was 350
+            # Switch intent to speed flip then kickoff like normal | dont flip to center of ball
+            agent.set_intent(kickoff_wide2())
+
+
+class recovery(iSmartRoutine):
+    # Point towards our velocity vector and land upright, unless we aren't moving very fast
+    # A vector can be provided to control where the car points when it lands
+    def __init__(self, target=None):
+        self.target = target
+
+    def run(self, agent):
+        if self.target != None:
+            local_target = agent.me.local((self.target - agent.me.location).flatten())
+        else:
+            local_target = agent.me.local(agent.me.velocity.flatten())
+
+        defaultPD(agent, local_target)
+        agent.controller.throttle = 1
+        if not agent.me.airborne:
+            agent.clear_intent()
+
+
 class Recovery(iSmartRoutine):
     # Point towards our velocity vector and land upright, unless we aren't moving very fast
     # A vector can be provided to control where the car points when it lands

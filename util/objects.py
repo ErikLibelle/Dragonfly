@@ -31,6 +31,17 @@ class CommandAgent(BaseAgent, iCommandAgent):
         # a flag that tells us when kickoff is happening
         self.kickoff_flag = False
 
+    def getKickoffPosition(self, vec):
+        kickoff_locations = [[2048, 2560], [256, 3848], [0, 4608]]
+        self.ball_local = self.me.local(self.ball.location - self.me.location)
+        # 0 == wide diagonal, 1 == short diagonal, 2 == middle
+        if abs(vec[0]) >= 350:
+            return 0
+        elif abs(vec[0]) > 5:
+            return 1
+        else:
+            return 2
+
     def get_ready(self, packet):
         # Preps all of the objects that will be updated during play
         field_info: game_data_struct.FieldInfoPacket = self.get_field_info()

@@ -1,7 +1,7 @@
 # This file is for strategy
-
+import os
 from util.objects import *
-from util.routines import Kickoff, ShortShot, GoTo
+from util.routines import *
 from util.tools import find_hits
 
 
@@ -19,8 +19,65 @@ class Bot(CommandAgent):
 
         self.intent_swaps += 1
 
+        def KickoffInitiation(kickoff_type):
+            # Initializes Kickoff
+            print("Kickoff Initialized")
+            if kickoff_type == 0:  # Wide Diagnonal / Corners
+                if self.ball_local[1] > 0:
+                    self.debugtext = "Kickoff off from: Right Wide Diagonal"  # Debug
+                    print("Kickoff off from: Right Wide Diagnonal")  # Log
+                    self.set_intent(kickoff())
+                    return
+                else:
+                    self.debugtext = "Kickoff off from: Left Wide Diagonal"  # Debug
+                    print("Kickoff off from: Left Wide Diagnonal")  # Log
+                    self.set_intent(kickoff())
+                    return
+            elif kickoff_type == 1:  # Short Diagonal / Back Sides
+                if self.ball_local[1] < 0:
+                    self.debugtext = "Kicking off from: Right Short Diagonal"  # Debug
+                    print("Kicking off from: Right Short Diagonal")  # Log
+                    self.set_intent(kickoff_short())
+                    return
+                else:
+                    self.debugtext = "Kicking off from: Left Short Diagonal"  # Debug
+                    print("Kicking off from: Left Short Diagonal")  # Log
+                    self.set_intent(kickoff_short())
+                    return
+            elif kickoff_type == 2:  # Middle / Back Middle
+                self.debugtext = "Kicking off from: Middle"  # Debug
+                print("Kicking off from: Middle")  # Log
+                self.set_intent(kickoff_center())
+                return
+            else:
+                self.debugtext = (
+                    "Error KickoffInitiation Cannot recognize Kickoff Position"  # Debug
+                )
+                print(
+                    "Error KickoffInitiation Cannot recognize Kickoff Position"
+                )  # Log
+                self.set_intent(kickoff())
+                return
+
+        # if self.kickoff_flag:
+        #     self.set_intent(Kickoff())
+        #     return
         if self.kickoff_flag:
-            self.set_intent(Kickoff())
+            kickoff_type = self.getKickoffPosition(
+                self.me.location
+            )  # Gets Kickoff Location
+            KickoffInitiation(kickoff_type)  # Starts Kickoff Routine
+            self.clear_debug_lines()
+            self.add_debug_line(
+                "me_to_kickoff", self.me.location, self.ball.location, [0, 0, 255]
+            )
+            self.add_debug_line(
+                "kickoff_to_goal",
+                self.ball.location,
+                self.foe_goal.location,
+                [0, 0, 255],
+            )
+            print(f"Kicking Off | Type: {kickoff_type}")  # Log
             return
 
         # @TODO: Make a state engine that determines whether we are in offense, defense, or scramble
