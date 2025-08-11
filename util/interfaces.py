@@ -80,6 +80,7 @@ class iSmartRoutine(Protocol):
     last_check: int = -10000
     name: str = ""
     first_run: bool = False
+    time_running: int = 0
 
     def __init__(self) -> None:
         super().__init__()

@@ -1,5 +1,4 @@
 # This file is for strategy
-import os
 from util.objects import *
 from util.routines import *
 from util.tools import find_hits
@@ -59,24 +58,11 @@ class Bot(CommandAgent):
                 self.set_intent(kickoff())
                 return
 
-        # if self.kickoff_flag:
-        #     self.set_intent(Kickoff())
-        #     return
         if self.kickoff_flag:
             kickoff_type = self.getKickoffPosition(
                 self.me.location
             )  # Gets Kickoff Location
             KickoffInitiation(kickoff_type)  # Starts Kickoff Routine
-            self.clear_debug_lines()
-            self.add_debug_line(
-                "me_to_kickoff", self.me.location, self.ball.location, [0, 0, 255]
-            )
-            self.add_debug_line(
-                "kickoff_to_goal",
-                self.ball.location,
-                self.foe_goal.location,
-                [0, 0, 255],
-            )
             print(f"Kicking Off | Type: {kickoff_type}")  # Log
             return
 

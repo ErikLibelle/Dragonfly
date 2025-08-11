@@ -4,8 +4,9 @@ from util.interfaces import iSmartRoutine
 # This file holds all of the mechanical tasks, called "routines", that the bot can do
 
 
-class drive:
+class drive(iSmartRoutine):
     def __init__(self, speed, target=None) -> None:
+        super().__init__()
         self.speed = speed
         self.target = target
 
@@ -16,7 +17,10 @@ class drive:
             defaultPD(agent, agent.me.local(relative_target))
 
 
-class atba:
+class atba(iSmartRoutine):
+    def __init__(self):
+        super().__init__()
+
     # An example routine that just drives towards the ball at max speed
     def run(self, agent):
         relative_target = agent.ball.location - agent.me.location
@@ -25,10 +29,11 @@ class atba:
         defaultThrottle(agent, 2300)
 
 
-class aerial_shot:
+class aerial_shot(iSmartRoutine):
     # Very similar to JumpShot(), but instead designed to hit targets above 300uu
     # ***This routine is a WIP*** It does not currently hit the ball very hard, nor does it like to be accurate above 600uu or so
     def __init__(self, ball_location, intercept_time, shot_vector, ratio):
+        super().__init__()
         self.ball_location = ball_location
         self.intercept_time = intercept_time
         # The direction we intend to hit the ball in

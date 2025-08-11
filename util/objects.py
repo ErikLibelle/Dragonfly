@@ -66,7 +66,7 @@ class CommandAgent(BaseAgent, iCommandAgent):
             if packet.game_cars[i].team != self.team
         ]
 
-    def set_intent(self, routine):
+    def set_intent(self, routine: iSmartRoutine):
         self.intent = routine
 
     def get_intent(self):
@@ -134,21 +134,27 @@ class CommandAgent(BaseAgent, iCommandAgent):
         self.preprocess(packet)
 
         self.renderer.begin_rendering()
-        # Run our strategy code
+
+        if self.time % 5 == 0 and self.get_intent() is not None:
+            print("current intent:", self.get_intent().name)
+
         self.run()
 
         intent = self.get_intent()
         if intent is not None:
             intent.run(self)
+            intent.time_running += 1
             if intent.first_run is True:
                 intent.first_run = False
                 print("running", intent.__class__.__name__)
+            elif intent.time_running > 200:
+                print("intent", intent.__class__.__name__)
+                self.clear_intent()
         self.renderer.end_rendering()
         # send our updated controller back to rlbot
         return self.controller
 
     def run(self):
-        # override this with your strategy code
         pass
 
 
