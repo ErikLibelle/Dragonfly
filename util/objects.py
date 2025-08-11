@@ -143,13 +143,14 @@ class CommandAgent(BaseAgent, iCommandAgent):
         intent = self.get_intent()
         if intent is not None:
             intent.run(self)
-            intent.time_running += 1
             if intent.first_run is True:
                 intent.first_run = False
                 print("running", intent.__class__.__name__)
-            elif intent.time_running > 200:
-                print("UNMOUNTING INTENT", intent.__class__.__name__)
-                self.clear_intent()
+            if intent.time_running is not None:
+                intent.time_running += 1
+                if intent.time_running > 200:
+                    print("UNMOUNTING INTENT", intent.__class__.__name__)
+                    self.clear_intent()
         self.renderer.end_rendering()
         # send our updated controller back to rlbot
         return self.controller

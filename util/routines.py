@@ -270,10 +270,11 @@ class GoTo(iSmartRoutine):
             agent.set_intent(Recovery(self.target))
 
 
-class goto_boost:
+class goto_boost(iSmartRoutine):
     # very similar to goto() but designed for grabbing boost
     # if a target is provided the bot will try to be facing the target as it passes over the boost
     def __init__(self, boost, target=None):
+        super().__init__()
         self.boost = boost
         self.target = target
 
@@ -341,6 +342,7 @@ class JumpShot(iSmartRoutine):
     def __init__(
         self, ball_location, intercept_time, shot_vector, ratio, direction=1, speed=2300
     ):
+        super().__init__()
         self.ball_location = ball_location
         self.intercept_time = intercept_time
         # The direction we intend to hit the ball in
